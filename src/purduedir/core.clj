@@ -1,5 +1,6 @@
 (ns purduedir.core
-  (:require [net.cgrand.enlive-html :as html])
+  (:require [net.cgrand.enlive-html :as html]
+            [clojure.data.json :as json])
   (import [java.net URLEncoder])
   (:gen-class))
 
@@ -24,10 +25,14 @@
   (let [content (html/select row [:tr])]
     (map getContent content)))
 
+(defn getTables
+  [searchString]
+  (html/select (fetch-url (createURL searchString)) [:table]))
+
 (defn callDir
   []
-  (let [tables (html/select (fetch-url (createURL "Kyle")) [:table])]
-        (map handle-table-row tables)))
+  (let [tables (getTables "Kyle Potts")]
+        (handle-table-row tables)))
 
 (defn -main
   [& args]
