@@ -51,7 +51,8 @@
   (let [cachedResponse (wcar* (car/get name))]
     (if (= nil cachedResponse) 
       (let [response (json/write-str (queryDirectory name))]
-        (wcar* (car/set name response))
+        (wcar* (car/set name response ))
+        (wcar* (car/expire name 2628000))
         response) 
       (wcar* (car/get name)))))
                                          
