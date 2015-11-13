@@ -1,8 +1,13 @@
 (ns purduedir.core
   (:require [net.cgrand.enlive-html :as html]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+             [taoensso.carmine :as car :refer (wcar)])
   (import [java.net URLEncoder])
   (:gen-class))
+
+
+(def server1-conn {:pool {} :spec {:uri "redis://h:pb17bu9bd2setv7vhp3rutkktd2@ec2-54-83-9-36.compute-1.amazonaws.com:15469/"}}) 
+(defmacro wcar* [& body] `(car/wcar purduedir.core/server1-conn ~@body))
 
 (defn createBasicSearchUrl
   [searchString]
@@ -33,7 +38,7 @@
 (defn getTable
   [searchString]
   (let [content (fetch-url (createBasicSearchUrl searchString))  table (html/select content [:table.more])]
-    (if (not= (count table) 0 ) {:success true :data table} {:sucess false :data (getSearchError content)})))
+    (if (not= (count table) 0 ) {:success true :data table} {:sucess false :error (getSearchError content)})))
 
 
 (defn queryDirectory
@@ -43,7 +48,12 @@
 
 (defn queryDirectoryJson
   [name]
-  (json/write-str (queryDirectory name)))
+  (let [cachedResponse (wcar* (car/get name))]
+    (if (= nil cachedResponse) 
+      (let [response (json/write-str (queryDirectory name))]
+        (wcar* (car/set name response))
+        response) 
+      (wcar* (car/get name)))))
                                          
                                          
                                          
